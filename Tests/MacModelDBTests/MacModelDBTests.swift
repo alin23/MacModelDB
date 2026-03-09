@@ -1,5 +1,5 @@
-import XCTest
 @testable import MacModelDB
+import XCTest
 
 final class MacModelDBTests: XCTestCase {
     func testModelIdentifierIsNotEmpty() {

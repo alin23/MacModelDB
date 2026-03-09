@@ -1,6 +1,7 @@
 import CoreGraphics
 import Foundation
 import IOKit.hid
+import IOKit.ps
 
 // MARK: - MacModel
 
@@ -21,13 +22,12 @@ public enum MacModel: String, CaseIterable {
 
 /// Detects the current Mac's model identifier and hardware type.
 public enum MacModelDB {
-
     /// The raw model identifier string, e.g. "Mac14,7" or "MacBookPro18,1".
     public static let modelIdentifier: String = {
         #if os(iOS) && !arch(x86_64) && !arch(i386)
-        return (try? sysctlString(for: [CTL_HW, HW_MACHINE])) ?? "Unknown"
+            return (try? sysctlString(for: [CTL_HW, HW_MACHINE])) ?? "Unknown"
         #else
-        return (try? sysctlString(for: [CTL_HW, HW_MODEL])) ?? "Unknown"
+            return (try? sysctlString(for: [CTL_HW, HW_MODEL])) ?? "Unknown"
         #endif
     }()
 
@@ -49,32 +49,31 @@ public enum MacModelDB {
 extension MacModelDB {
     static let macBookModels: Set<String> =
         Set([2, 5, 6, 7, 9, 10, 15].map { "Mac14,\($0)" })
-        .union([2, 3, 6, 7, 8, 9, 10, 11, 12, 13].map { "Mac15,\($0)" })
-        .union([1, 5, 6, 7, 8, 12, 13].map { "Mac16,\($0)" })
-        .union([2, 3, 4, 5, 6, 7, 8, 9].map { "Mac17,\($0)" })
+            .union([2, 3, 6, 7, 8, 9, 10, 11, 12, 13].map { "Mac15,\($0)" })
+            .union([1, 5, 6, 7, 8, 12, 13].map { "Mac16,\($0)" })
+            .union([2, 3, 4, 5, 6, 7, 8, 9].map { "Mac17,\($0)" })
 
     static let macMiniModels: Set<String> =
         Set([3, 12].map { "Mac14,\($0)" })
-        .union([16].map { "Mac16,\($0)" })
+            .union([16].map { "Mac16,\($0)" })
 
     static let macProModels: Set<String> =
         Set([8].map { "Mac14,\($0)" })
 
     static let iMacModels: Set<String> =
         Set([4, 5].map { "Mac15,\($0)" })
-        .union([2, 3].map { "Mac16,\($0)" })
+            .union([2, 3].map { "Mac16,\($0)" })
 
     static let macStudioModels: Set<String> =
         Set([1, 2].map { "Mac13,\($0)" })
-        .union([13, 14].map { "Mac14,\($0)" })
-        .union([14].map { "Mac15,\($0)" })
-        .union([9].map { "Mac16,\($0)" })
+            .union([13, 14].map { "Mac14,\($0)" })
+            .union([14].map { "Mac15,\($0)" })
+            .union([9].map { "Mac16,\($0)" })
 }
 
 // MARK: - Detection
 
 extension MacModelDB {
-
     private static func detectModel() -> MacModel {
         let id = modelIdentifier
         let lower = id.lowercased()
@@ -107,29 +106,54 @@ extension MacModelDB {
 
     private static func humanReadableName(for model: MacModel, identifier: String) -> String {
         switch model {
-        case .macBookAir: return "MacBook Air"
-        case .macBookPro: return "MacBook Pro"
-        case .macBook: return "MacBook"
-        case .macMini: return "Mac Mini"
-        case .macPro: return "Mac Pro"
-        case .macStudio: return "Mac Studio"
-        case .iMac: return "iMac"
-        case .xserve: return "Xserve"
-        case .unknown: return identifier
+        case .macBookAir: "MacBook Air"
+        case .macBookPro: "MacBook Pro"
+        case .macBook: "MacBook"
+        case .macMini: "Mac Mini"
+        case .macPro: "Mac Pro"
+        case .macStudio: "Mac Studio"
+        case .iMac: "iMac"
+        case .xserve: "Xserve"
+        case .unknown: identifier
         }
     }
 }
 
 // MARK: - Convenience
 
-extension MacModelDB {
-    public static var isMacBook: Bool { [.macBook, .macBookAir, .macBookPro].contains(model) }
-    public static var isMacMini: Bool { model == .macMini }
-    public static var isMacPro: Bool { model == .macPro }
-    public static var isMacStudio: Bool { model == .macStudio }
-    public static var isiMac: Bool { model == .iMac }
-    public static var isLaptop: Bool { isMacBook }
-    public static var isDesktop: Bool { !isLaptop && model != .unknown }
+public extension MacModelDB {
+    static var isMacBook: Bool { [.macBook, .macBookAir, .macBookPro].contains(model) }
+    static var isMacMini: Bool { model == .macMini }
+    static var isMacPro: Bool { model == .macPro }
+    static var isMacStudio: Bool { model == .macStudio }
+    static var isiMac: Bool { model == .iMac }
+    static var isLaptop: Bool { isMacBook }
+    static var isDesktop: Bool { !isLaptop && model != .unknown }
+
+    static func batteryLevel() -> Double? {
+        guard isMacBook, let snapshot = IOPSCopyPowerSourcesInfo()?.takeRetainedValue(),
+              let sources: NSArray = IOPSCopyPowerSourcesList(snapshot)?.takeRetainedValue()
+        else { return nil }
+
+        for ps in sources {
+            guard let info: NSDictionary = IOPSGetPowerSourceDescription(snapshot, ps as CFTypeRef)?.takeUnretainedValue(),
+                  let capacity = info[kIOPSCurrentCapacityKey] as? Int,
+                  let max = info[kIOPSMaxCapacityKey] as? Int
+            else { continue }
+
+            return (max > 0) ? (Double(capacity) / Double(max)) : Double(capacity)
+        }
+
+        return nil
+    }
+
+    static var hasCamera: Bool {
+        !AVCaptureDevice.DiscoverySession(
+            deviceTypes: [.builtInWideAngleCamera, .external, .continuityCamera],
+            mediaType: .video,
+            position: .unspecified
+        ).devices.isEmpty
+    }
 }
 
 // MARK: - Lid Detection
@@ -157,7 +181,7 @@ extension MacModelDB {
         CFSetGetValues(cfDevices, &ptrs)
 
         for ptr in ptrs {
-            guard let ptr = ptr else { continue }
+            guard let ptr else { continue }
             let candidate = Unmanaged<IOHIDDevice>.fromOpaque(ptr).takeUnretainedValue()
             guard IOHIDDeviceOpen(candidate, IOOptionBits(kIOHIDOptionsTypeNone)) == kIOReturnSuccess else { continue }
             var report = [UInt8](repeating: 0, count: 8)

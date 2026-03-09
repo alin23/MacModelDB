@@ -57,11 +57,13 @@ if MacModelDB.isDesktop {
 | `isiMac` | `Bool` | iMac |
 | `isLaptop` | `Bool` | Same as `isMacBook` |
 | `isDesktop` | `Bool` | Any non-laptop, non-unknown model |
+| `hasCamera` | `Bool` | Whether a camera (built-in, external, or Continuity) is available |
+| `batteryLevel()` | `Double?` | Current battery level (0.0–1.0), `nil` on desktops |
 
 ### MacModel enum
 
 ```swift
-public enum MacModel: String, Sendable, CaseIterable {
+public enum MacModel: String, CaseIterable {
     case macBookAir, macBookPro, macBook
     case macMini, macPro, macStudio
     case iMac, xserve, unknown
