@@ -1,3 +1,4 @@
+import AVFoundation
 import CoreGraphics
 import Foundation
 import IOKit.hid
@@ -148,8 +149,14 @@ public extension MacModelDB {
     }
 
     static var hasCamera: Bool {
-        !AVCaptureDevice.DiscoverySession(
-            deviceTypes: [.builtInWideAngleCamera, .external, .continuityCamera],
+        let deviceTypes: [AVCaptureDevice.DeviceType]
+        if #available(macOS 14.0, *) {
+            deviceTypes = [.builtInWideAngleCamera, .external, .continuityCamera]
+        } else {
+            deviceTypes = [.builtInWideAngleCamera, .externalUnknown]
+        }
+        return !AVCaptureDevice.DiscoverySession(
+            deviceTypes: deviceTypes,
             mediaType: .video,
             position: .unspecified
         ).devices.isEmpty
