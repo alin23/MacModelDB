@@ -53,9 +53,10 @@ public enum MacModelDB {
 // MARK: - Model Database
 
 extension MacModelDB {
-    /// Every Apple silicon Mac with a "MacXX,Y" identifier, with Apple's name for it, as printed on
-    /// Apple's "Identify your Mac model" pages for each product (support.apple.com 108052, 102869,
-    /// 102852, 108054, 102231 and 102887). Older identifiers such as "MacBookPro18,1" name their
+    /// Every Apple silicon Mac with a "MacXX,Y" identifier on Apple's "Identify your Mac model" pages
+    /// for each product (support.apple.com 108052, 102869, 102852, 108054, 102231 and 102887), with
+    /// Apple's name for it. Where one name covers models with different chips, the chip is added
+    /// from the same page. Older identifiers such as "MacBookPro18,1" name their
     /// family and don't need an entry.
     static let knownModels: [String: (model: MacModel, name: String)] = [
         // MacBook Pro
