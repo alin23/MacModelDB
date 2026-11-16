@@ -32,5 +32,22 @@ final class MacModelDBTests: XCTestCase {
         XCTAssertTrue(MacModelDB.macProModels.contains("Mac14,8"))
         XCTAssertTrue(MacModelDB.iMacModels.contains("Mac15,4"))
         XCTAssertTrue(MacModelDB.macStudioModels.contains("Mac13,1"))
+        XCTAssertTrue(MacModelDB.macBookModels.contains("Mac17,10"))
+        XCTAssertTrue(MacModelDB.macMiniModels.contains("Mac16,10"))
+        XCTAssertEqual(MacModelDB.knownModels["Mac17,10"]?.model, .macBookPro)
+        XCTAssertEqual(MacModelDB.knownModels["Mac17,4"]?.model, .macBookAir)
+    }
+
+    func testFamiliesDontOverlap() {
+        let families = [MacModelDB.macBookModels, MacModelDB.macMiniModels, MacModelDB.macProModels, MacModelDB.iMacModels, MacModelDB.macStudioModels]
+        XCTAssertEqual(families.map(\.count).reduce(0, +), MacModelDB.knownModels.count)
+    }
+
+    func testLaptopSignalsAgreeWithTheModel() {
+        // Every MacBook has a battery and a built-in keyboard; a desktop has neither.
+        guard MacModelDB.knownModels[MacModelDB.modelIdentifier] != nil || MacModelDB.modelIdentifier.lowercased().hasPrefix("macbook") else { return }
+        XCTAssertEqual(MacModelDB.hasLid, MacModelDB.isMacBook)
+        XCTAssertEqual(MacModelDB.hasInternalBattery, MacModelDB.isMacBook)
+        XCTAssertEqual(MacModelDB.hasClamshell, MacModelDB.isMacBook)
     }
 }

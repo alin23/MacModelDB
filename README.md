@@ -1,6 +1,6 @@
 # MacModelDB
 
-A lightweight Swift package for detecting Mac hardware type. Identifies MacBooks, iMacs, Mac Minis, Mac Pros, Mac Studios, and Xserves using Apple's model identifiers and IOKit lid hardware detection as a fallback.
+A lightweight Swift package for detecting Mac hardware type. Identifies MacBooks, iMacs, Mac Minis, Mac Pros, Mac Studios, and Xserves using Apple's model identifiers. A model that is newer than the database is recognised as a laptop when it has a lid, a battery, a built-in keyboard or an illuminated Apple logo.
 
 ## Requirements
 
@@ -31,6 +31,9 @@ MacModelDB.model // .macBookAir
 // Get a human-readable name
 MacModelDB.deviceName // "MacBook Air"
 
+// Get Apple's name for the model
+MacModelDB.marketingName // "MacBook Air (13-inch, M2, 2022)"
+
 // Check hardware type
 if MacModelDB.isMacBook {
     print("Running on a laptop")
@@ -48,7 +51,8 @@ if MacModelDB.isDesktop {
 | `modelIdentifier` | `String` | Raw sysctl model string, e.g. `"Mac14,7"` |
 | `model` | `MacModel` | Detected hardware type enum |
 | `deviceName` | `String` | Human-readable name, e.g. `"MacBook Pro"` |
-| `hasLid` | `Bool` | Whether lid hardware was detected |
+| `marketingName` | `String?` | Apple's name for the model, e.g. `"MacBook Pro (16-inch PROLED XDR, M5 Pro or M5 Max)"`, or nil for a model newer than the database |
+| `hasLid` | `Bool` | Whether laptop hardware was detected: a lid, a battery, a built-in keyboard or an illuminated Apple logo |
 | `hasBuiltInDisplay` | `Bool` | Whether a built-in display was detected |
 | `isMacBook` | `Bool` | MacBook, MacBook Air, or MacBook Pro |
 | `isMacMini` | `Bool` | Mac Mini |
