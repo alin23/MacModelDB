@@ -23,7 +23,7 @@ dependencies: [
 import MacModelDB
 
 // Get the raw model identifier
-MacModelDB.modelIdentifier // "Mac14,7"
+MacModelDB.modelIdentifier // "Mac14,2"
 
 // Get the detected model type
 MacModelDB.model // .macBookAir
@@ -32,7 +32,7 @@ MacModelDB.model // .macBookAir
 MacModelDB.deviceName // "MacBook Air"
 
 // Get Apple's name for the model
-MacModelDB.marketingName // "MacBook Air (13-inch, M2, 2022)"
+MacModelDB.marketingName // "MacBook Air (M2, 2022)"
 
 // Check hardware type
 if MacModelDB.isMacBook {
